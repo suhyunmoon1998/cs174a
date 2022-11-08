@@ -19,6 +19,10 @@ class Cube extends Shape {
         // Arrange the vertices into a square shape in texture space too:
         this.indices.push(0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6, 8, 9, 10, 9, 11, 10, 12, 13,
             14, 13, 15, 14, 16, 17, 18, 17, 19, 18, 20, 21, 22, 21, 23, 22);
+
+
+
+        
     }
 }
 
@@ -29,6 +33,22 @@ class Cube_Outline extends Shape {
         // When a set of lines is used in graphics, you should think of the list entries as
         // broken down into pairs; each pair of vertices will be drawn as a line segment.
         // Note: since the outline is rendered with Basic_shader, you need to redefine the position and color of each vertex
+
+        this.arrays.position = Vector3.cast(
+            [-1, 1, 1], [1, 1, 1], [-1, 1, -1], [1, 1, -1], [-1, -1, 1], [1, -1, 1], [-1, -1, -1], [1, -1, -1], //horizontal
+            [-1, 1, 1], [-1, 1, -1], [1, 1, 1], [1, 1, -1], [-1, -1, 1], [-1, -1, -1], [1, -1, 1], [1, -1, -1], //vertical
+            [-1, 1, 1], [-1, -1, 1], [1, 1, 1], [1, -1, 1], [-1, 1, -1], [-1, -1, -1], [1, 1, -1], [1, -1, -1], //height
+
+        );
+
+        this.arrays.color = Vector3.cast(
+            [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1],
+            [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1],
+            [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1], [1,1,1,1]
+        );
+
+        this.indices = false;   //Do not make an indices list - instead use "this.indices = false
+    
     }
 }
 
@@ -57,10 +77,19 @@ class Base_Scene extends Scene {
 
         // *** Materials
         this.materials = {
+            //ball
+            sphere: new Material(new defs.Phong_Shader(),
+                {ambient: 1, diffusivity: .6, color: color(1, 1, 1, 1)}),
+
+            
             plastic: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
         };
         // The white material and basic shader are used for drawing the outline.
+
+
+
+        
         this.white = new Material(new defs.Basic_Shader());
     }
 
@@ -90,6 +119,9 @@ export class Assignment2 extends Base_Scene {
      * This gives you a very small code sandbox for editing a simple scene, and for
      * experimenting with matrix transformations.
      */
+
+
+    
     set_colors() {
         // TODO:  Create a class member variable to store your cube's colors.
         // Hint:  You might need to create a member variable at somewhere to store the colors, using `this`.
@@ -98,31 +130,114 @@ export class Assignment2 extends Base_Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("Change Colors", ["c"], this.set_colors);
+        this.key_triggered_button("left", ["h"], () => {
+            this.is_left
+        });
+        
+            
         // Add a button for controlling the scene.
-        this.key_triggered_button("Outline", ["o"], () => {
-            // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
+        this.key_triggered_button("right", ["k"], () => {
+            this.is_right 
         });
-        this.key_triggered_button("Sit still", ["m"], () => {
-            // TODO:  Requirement 3d:  Set a flag here that will toggle your swaying motion on and off.
-        });
-    }
 
+        
+        this.key_triggered_button("forward", ["u"], () => {
+            this.is_forward
+        });
+        
+        this.key_triggered_button("back", ["j"], () => {
+            
+            this.is_back
+            
+        });
+
+    }
+        
     draw_box(context, program_state, model_transform) {
         // TODO:  Helper function for requirement 3 (see hint).
         //        This should make changes to the model_transform matrix, draw the next box, and return the newest model_transform.
         // Hint:  You can add more parameters for this function, like the desired color, index of the box, etc.
+        let i =2 ;
+
+        
+        if(this.is_forward){
+                    i=4 ;
+                 this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( -18, 3, i)), this.materials.plastic.override({color:box}));
+
+            }
+
 
         return model_transform;
     }
 
+
+
+    
     display(context, program_state) {
         super.display(context, program_state);
-        const blue = hex_color("#1a9ffa");
+        const gray = hex_color("#808080");
+        const box = hex_color("#FF0000")
         let model_transform = Mat4.identity();
+        //   let scale_factor = 1000;
+
+        let i =2 ;
+  
+
+   //  let boxman =this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( -18, 3, 2)), this.materials.plastic.override({color:box}));
+
+
+
+       //draw box
+
+        //start
+            
+            
+        
+       for(let i=0 ; i <50; i ++){
+
+   //borad
+
+            
+        model_transform = this.draw_box(context, program_state, model_transform);
+      // model_transform = model_transform.times(Mat4.scale(1, 1,1));
+        model_transform = model_transform.times(Mat4.translation(0, 0, -1));
+
+ //right borader       
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( 16, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( 16, 2, 0)), this.materials.plastic.override({color:gray}));
+    
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(8, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(6, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, 0)), this.materials.plastic.override({color:gray}));            
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( 0, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-10, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-12, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-14, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-16, 0, 0)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-18, 0, 3)), this.materials.plastic.override({color:gray}));
+    
+//left borader
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( - 26, 0, 0)), this.materials.plastic.override({color:gray}));
+       this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation( -26, 2, 0)), this.materials.plastic.override({color:gray}));
+
+     //this.shapes.sphere.draw(context, program_state, model_transform.times(Mat4.translation( -26, 2, 0)), this.materials.plastic.override({color:gray}));
+   
+     
+      }
+        
+          
+        
+
+    
+
 
         // Example for drawing a cube, you can remove this line if needed
-        this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:blue}));
+      //  this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color:blue}));
         // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
     }
 }
