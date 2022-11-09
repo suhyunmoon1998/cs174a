@@ -29,25 +29,33 @@ export class Project extends Scene {
         };
 
         // Variables global to the scene
-        this.avatar_transform = Mat4.translation(0, 3, 0);
+        // TODO: Tweak the size of sphere and it's location as necessary
+        this.avatar_point = vec3(0, 1.5, 0)
+        this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
+            .times(Mat4.scale(0.5, 0.5, 0.5));
+
         this.MOVE_RATE = 0.2;
     }
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("left", ["h"], () => {
             this.avatar_transform = Mat4.translation(-this.MOVE_RATE, 0, 0).times(this.avatar_transform);
+            this.avatar_point[0] -= this.MOVE_RATE;
         });
 
         this.key_triggered_button("right", ["k"], () => {
             this.avatar_transform = Mat4.translation(this.MOVE_RATE, 0, 0).times(this.avatar_transform);
+            this.avatar_point[0] += this.MOVE_RATE;
         });
 
         this.key_triggered_button("forward", ["u"], () => {
             this.avatar_transform = Mat4.translation(0, 0, -this.MOVE_RATE).times(this.avatar_transform);
+            this.avatar_point[2] -= this.MOVE_RATE;
         });
 
         this.key_triggered_button("back", ["j"], () => {
             this.avatar_transform = Mat4.translation(0, 0, this.MOVE_RATE).times(this.avatar_transform);
+            this.avatar_point[2] += this.MOVE_RATE;
         });
     }
     display(context, program_state) {
@@ -55,12 +63,6 @@ export class Project extends Scene {
         // some initial setup.
 
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-        if (!context.scratchpad.controls) {
-            // COMMENTED TO PREVENT CAMERA MOVEMENT CONTROLS
-            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
-            // Define the global camera and projection matrices, which are stored in program_state.
-            program_state.set_camera(Mat4.translation(5, -10, -30));
-        }
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
 
@@ -69,40 +71,18 @@ export class Project extends Scene {
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
 
-
-
-
         const gray = hex_color("#808080");
         let model_transform = Mat4.identity();
 
-        //draw box
-        for (let i = 0; i < 50; i++) {
-            model_transform = model_transform.times(Mat4.translation(0, 0, -1));
+        // TODO: Tweak eye point as necessary to make the game look good
+        let eye_point = (this.avatar_point).plus(vec3(0, 3.6, 6));
+        let camera_matrix = Mat4.look_at(eye_point, this.avatar_point, vec3(0, 1, 0));
+        program_state.set_camera(camera_matrix);
 
-            //right border
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(16, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(16, 2, 0)), this.materials.plastic.override({color: gray}));
+        // TODO: DRAW MAZE
+        this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.plastic.override({color: gray}));
 
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(8, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(6, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-10, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-12, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-14, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-16, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-18, 0, 3)), this.materials.plastic.override({color: gray}));
-
-            //left border
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-26, 0, 0)), this.materials.plastic.override({color: gray}));
-            this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-26, 2, 0)), this.materials.plastic.override({color: gray}));
-        }
-
+        // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
     }
 }
