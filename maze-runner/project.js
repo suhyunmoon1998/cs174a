@@ -92,10 +92,87 @@ export class Project extends Scene {
 
         // DRAW OBJECTS
         const gray = hex_color("#808080");
+        const darkgray =hex_color("#555555")
+        const red = hex_color("#FF0000");
         let model_transform = Mat4.identity();
 
         // TODO: DRAW MAZE
-        this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.plastic.override({color: gray}));
+      //  this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.plastic.override({color: gray}));
+
+          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.5, 2)), this.materials.plastic.override({color:red}));
+
+       this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, 0)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -2)), this.materials.plastic.override({color:gray}));
+                 this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -2)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -2)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -4)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -6)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -6)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -6)), this.materials.plastic.override({color:gray}));
+           this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2 ,0, -6)), this.materials.plastic.override({color:gray}));
+
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -6)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -4)), this.materials.plastic.override({color:gray}));
+
+
+          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -2)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -2)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -2)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -4)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -6)), this.materials.plastic.override({color:gray}));
+
+          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -8)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -10)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -10)), this.materials.plastic.override({color:gray}));
+
+
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -10)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -12)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, -12)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -12)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -12)), this.materials.plastic.override({color:gray}));
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -14)), this.materials.plastic.override({color:gray}));
+
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -16)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -16)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -18)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -20)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -20)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -20)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -22)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, -22)), this.materials.plastic.override({color:gray}));
+
+        
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -22)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -20)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -18)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -18)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -18)), this.materials.plastic.override({color:gray}));
+
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -20)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -22)), this.materials.plastic.override({color:gray}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -24)), this.materials.plastic.override({color:gray}));
+        
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0.5, -26)), this.materials.plastic.override({color:red}));
+
+        for(let i = 0;i >= -28 ; i=i-2 ){
+            
+            for(let l= 0 ; l <14 ; l= l +2 )
+                {
+                     this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-12, l, i)), this.materials.plastic.override({color:darkgray}));
+                     this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(8, l, i)), this.materials.plastic.override({color:darkgray}));
+
+                }
+             
+             
+        }
+
+        
+        
+
+        
+        
+
 
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
