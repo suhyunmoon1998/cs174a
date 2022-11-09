@@ -28,9 +28,14 @@ export class Project extends Scene {
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
         };
 
+        const data_members = {
+            thrust: vec3(0, 0, 0), meters_per_frame: 7, speed_multiplier: 1,
+        };
+        Object.assign(this, data_members);
+
         // Variables global to the scene
         // TODO: Tweak the size of sphere and it's location as necessary
-        this.avatar_point = vec3(0, 1.5, 0)
+        this.avatar_point = vec4(0, 1.5, 0, 1);
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
             .times(Mat4.scale(0.5, 0.5, 0.5));
 
@@ -38,31 +43,45 @@ export class Project extends Scene {
     }
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("left", ["h"], () => {
-            this.avatar_transform = Mat4.translation(-this.MOVE_RATE, 0, 0).times(this.avatar_transform);
-            this.avatar_point[0] -= this.MOVE_RATE;
-        });
-
-        this.key_triggered_button("right", ["k"], () => {
-            this.avatar_transform = Mat4.translation(this.MOVE_RATE, 0, 0).times(this.avatar_transform);
-            this.avatar_point[0] += this.MOVE_RATE;
-        });
-
-        this.key_triggered_button("forward", ["u"], () => {
-            this.avatar_transform = Mat4.translation(0, 0, -this.MOVE_RATE).times(this.avatar_transform);
-            this.avatar_point[2] -= this.MOVE_RATE;
-        });
-
-        this.key_triggered_button("back", ["j"], () => {
-            this.avatar_transform = Mat4.translation(0, 0, this.MOVE_RATE).times(this.avatar_transform);
-            this.avatar_point[2] += this.MOVE_RATE;
-        });
+        // this.key_triggered_button("left", ["h"], () => {
+        //     this.avatar_transform = Mat4.translation(-this.MOVE_RATE, 0, 0).times(this.avatar_transform);
+        //     this.avatar_point[0] -= this.MOVE_RATE;
+        // });
+        //
+        // this.key_triggered_button("right", ["k"], () => {
+        //     this.avatar_transform = Mat4.translation(this.MOVE_RATE, 0, 0).times(this.avatar_transform);
+        //     this.avatar_point[0] += this.MOVE_RATE;
+        // });
+        //
+        // this.key_triggered_button("forward", ["u"], () => {
+        //     this.avatar_transform = Mat4.translation(0, 0, -this.MOVE_RATE).times(this.avatar_transform);
+        //     this.avatar_point[2] -= this.MOVE_RATE;
+        // });
+        //
+        // this.key_triggered_button("back", ["j"], () => {
+        //     this.avatar_transform = Mat4.translation(0, 0, this.MOVE_RATE).times(this.avatar_transform);
+        //     this.avatar_point[2] += this.MOVE_RATE;
+        // });
+        this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
+        this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
+        this.key_triggered_button("Back", ["s"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
+        this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
     }
     display(context, program_state) {
-        // display():  Called once per frame of animation. Here, the base class's display only does
-        // some initial setup.
-
+        // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
+
+        // MOVE AVATAR AND CAMERA based on key input
+        const dt = program_state.animation_delta_time / 1000;
+        const m = this.speed_multiplier * this.meters_per_frame;
+        this.avatar_transform.pre_multiply(Mat4.translation(...this.thrust.times(dt*m)));
+        this.avatar_point = Mat4.translation(...this.thrust.times(dt*m)).times(this.avatar_point);
+
+        // TODO: Tweak eye point as necessary to make the game look good
+        let eye_point = (this.avatar_point.to3()).plus(vec3(0, 3.6, 6));
+        let camera_matrix = Mat4.look_at(eye_point, this.avatar_point.to3(), vec3(0, 1, 0));
+        program_state.set_camera(camera_matrix);
+
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
 
@@ -71,13 +90,9 @@ export class Project extends Scene {
         program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
 
 
+        // DRAW OBJECTS
         const gray = hex_color("#808080");
         let model_transform = Mat4.identity();
-
-        // TODO: Tweak eye point as necessary to make the game look good
-        let eye_point = (this.avatar_point).plus(vec3(0, 3.6, 6));
-        let camera_matrix = Mat4.look_at(eye_point, this.avatar_point, vec3(0, 1, 0));
-        program_state.set_camera(camera_matrix);
 
         // TODO: DRAW MAZE
         this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.plastic.override({color: gray}));
