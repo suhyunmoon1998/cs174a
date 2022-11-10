@@ -227,6 +227,7 @@ class Radius_Shader extends Shader {
                 // on to the next phase (fragment shader), then interpolated per-fragment, weighted by the
                 // pixel fragment's proximity to each of the 3 vertices (barycentric interpolation).
                 varying vec3 N, vertex_worldspace;
+                varying vec4 point_position;
                 // ***** PHONG SHADING HAPPENS HERE: *****                                       
                 vec3 phong_model_lights( vec3 N, vec3 vertex_worldspace ){                                        
                     // phong_model_lights():  Add up the lights' contributions.
@@ -242,9 +243,6 @@ class Radius_Shader extends Shader {
                         vec3 surface_to_light_vector = light_positions_or_vectors[i].xyz - 
                                                        light_positions_or_vectors[i].w * vertex_worldspace;                                             
                         float distance_to_light = length( surface_to_light_vector );
-                        if (distance_to_light > 2.0) { // TODO: fucking help me
-                            continue;
-                        }
         
                         vec3 L = normalize( surface_to_light_vector );
                         vec3 H = normalize( L + E );
@@ -272,6 +270,8 @@ class Radius_Shader extends Shader {
                 uniform mat4 projection_camera_model_transform;
         
                 void main(){                                                                   
+                    point_position = model_transform * vec4(position, 1);
+                    
                     // The vertex's final resting place (in NDCS):
                     gl_Position = projection_camera_model_transform * vec4( position, 1.0 );
                     // The final normal vector in screen space.
@@ -285,11 +285,18 @@ class Radius_Shader extends Shader {
         // A fragment is a pixel that's overlapped by the current triangle.
         // Fragments affect the final image or get discarded due to depth.
         return this.shared_glsl_code() + `
-                void main(){                                                           
-                    // Compute an initial (ambient) color:
-                    gl_FragColor = vec4( shape_color.xyz * ambient, shape_color.w );
-                    // Compute the final color with contributions from lights:
-                    gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+                void main(){
+                    gl_FragColor = vec4(0, 0, 0, 1);
+                    for(int i = 0; i < N_LIGHTS; i++) {                                            
+                        float distance_to_light = distance(light_positions_or_vectors[i].xyz, point_position.xyz);
+                        if (distance_to_light < 2.0) { // TODO: fucking help me
+                            // Compute an initial (ambient) color:
+                            gl_FragColor = vec4( shape_color.xyz * ambient, shape_color.w );
+                            // Compute the final color with contributions from lights:
+                            gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+                        }
+                    }
+                    
                   } `;
     }
 
