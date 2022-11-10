@@ -29,6 +29,7 @@ export class Project extends Scene {
             [-2,1,5],
             [1,1,10]
         );
+
         // *** Materials
         // TODO: Change materials to add texture etc.
         this.materials = {
@@ -42,10 +43,9 @@ export class Project extends Scene {
 
                 texture: new Texture("assets/rock3.png")
             })
-
         };
 
-        // Variables global to the scene
+        // *** Variables global to the scene
 
         const data_members = {
             thrust: vec3(0, 0, 0), meters_per_frame: 7, speed_multiplier: 1,
@@ -69,13 +69,20 @@ export class Project extends Scene {
             [-2,0,11],[-2,0,10],[-2,0,9],[-3,0,9],[-4,0,9],
             [-4,0,10],[-4,0,11],[-4,0,12]
         );
+
+        this.ALL_VISIBLE_INTERVAL = 4.0;
+        this.ALL_VISIBLE_TIME = 1.0;
+        this.all_visible = false;
+        this.set_last_time = false;
+        this.last_time_all_visible = 0;
+        this.start_time_all_visible = 0;
     }
 
     make_control_panel() {
         this.live_string(box => box.textContent = "Position: "
             + this.avatar_point[0].toFixed(2) + ", "
-            + this.avatar_point[1].toFixed(2)
-            + ", " + this.avatar_point[2].toFixed(2));
+            + this.avatar_point[1].toFixed(2)+ ", "
+            + this.avatar_point[2].toFixed(2));
         this.new_line();
         this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
         this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
@@ -154,11 +161,6 @@ export class Project extends Scene {
 
         // --------------- LIGHTS ---------------
         // *** Lights: *** Values of vector or point lights.
-        // program_state.lights = [
-        //     new Light(vec4(4, 2, -6, 1), color(1, 1, 1, 1), 1000),
-        //     new Light(vec4(-4, 2, -10, 1), color(1, 1, 1, 1), 1000),
-        //     new Light(vec4(2, 2, -20, 1), color(1, 1, 1, 1), 1000),
-        // ];
         this.set_lights(program_state);
 
         // RADIUS
@@ -166,6 +168,22 @@ export class Project extends Scene {
         const w = 2 * Math.PI / SWELL_PERIOD_SECONDS;
         let swell = Math.sin(w*t);
         let light_radius = 2 * swell + 4;
+
+        if (!this.set_last_time) {
+            this.last_time_all_visible = t;
+            this.set_last_time = true;
+        }
+        if (this.all_visible) {
+            light_radius = 100.0;
+        }
+        if (this.all_visible && (t > this.start_time_all_visible + this.ALL_VISIBLE_TIME)) {
+            this.last_time_all_visible = t;
+            this.all_visible = false;
+        }
+        if (!this.all_visible && (t > this.last_time_all_visible + this.ALL_VISIBLE_INTERVAL)) {
+            this.start_time_all_visible = t;
+            this.all_visible = true;
+        }
 
 
         // --------------- DRAW OBJECTS ---------------
