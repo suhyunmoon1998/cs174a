@@ -1,11 +1,12 @@
 import {defs, tiny} from './examples/common.js';
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Shader,Texture
+    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Shader, Texture
 } = tiny;
 
-const { Textured_Phong} =defs
- export class Project extends Scene {
+const {Textured_Phong} = defs
+
+export class Project extends Scene {
     /**
      * This Scene object can be added to any display canvas.
      * We isolate that code so it can be experimented with on its own.
@@ -29,13 +30,13 @@ const { Textured_Phong} =defs
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             path_light: new Material(new Radius_Shader(),
                 {color: hex_color("#808080")}),
-            texture: new Material(new Textured_Phong(),{
+            texture: new Material(new Textured_Phong(), {
                 //color: hex_color("#ffffff"),
-                ambient: 0.4, diffusivity:0.1, specularity: 0.4,
-                
+                ambient: 0.4, diffusivity: 0.1, specularity: 0.4,
+
                 texture: new Texture("assets/rock3.png")
             })
-            
+
         };
 
         const data_members = {
@@ -49,8 +50,9 @@ const { Textured_Phong} =defs
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
             .times(Mat4.scale(0.5, 0.5, 0.5));
 
-        this.MOVE_RATE = 0.2;
+        this.BOX_SIZE_units = 2;
     }
+
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         // this.key_triggered_button("left", ["h"], () => {
@@ -78,6 +80,20 @@ const { Textured_Phong} =defs
         this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
         //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
+    draw_walls(context, program_state) {
+        const LEFT_WALL_X_LOCATION = -12;
+        const RIGHT_WALL_X_LOCATION = 8
+        const BOX_SIZE_units = this.BOX_SIZE_units;
+        const WALL_DEPTH_boxes = 14;
+        const WALL_HEIGHT_boxes = 7;
+        for (let d = 0; d >= -(WALL_DEPTH_boxes*BOX_SIZE_units); d -= BOX_SIZE_units) {
+            for (let h = 0; h < (WALL_HEIGHT_boxes*BOX_SIZE_units); h += BOX_SIZE_units) {
+                this.shapes.cube.draw(context, program_state, Mat4.translation(LEFT_WALL_X_LOCATION, h, d), this.materials.texture);
+                this.shapes.cube.draw(context, program_state, Mat4.translation(RIGHT_WALL_X_LOCATION, h, d), this.materials.texture);
+            }
+        }
+    }
+
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
@@ -88,27 +104,20 @@ const { Textured_Phong} =defs
         // MOVE AVATAR AND CAMERA based on key input
         const dt = program_state.animation_delta_time / 1000;
         const m = this.speed_multiplier * this.meters_per_frame;
-        this.avatar_transform.pre_multiply(Mat4.translation(...this.thrust.times(dt*m)));
-        this.avatar_point = Mat4.translation(...this.thrust.times(dt*m)).times(this.avatar_point);
+        this.avatar_transform.pre_multiply(Mat4.translation(...this.thrust.times(dt * m)));
+        this.avatar_point = Mat4.translation(...this.thrust.times(dt * m)).times(this.avatar_point);
 
         // TODO: Apply gravity on the ball
         let gravity;
-        if(this.avatar_point[1] <= 1.5) {
+        if (this.avatar_point[1] <= 1.5) {
             this.thrust[1] = 0;
             this.avatar_point[1] = 1.5;
             gravity = 0;
-        }
-        else {
+        } else {
             gravity = 0.02;
         }
         this.thrust[1] -= gravity;
 
-
-
-
-
-
-        
 
         // TODO: Tweak eye point as necessary to make the game look good
         let eye_point = (this.avatar_point.to3()).plus(vec3(0, 3.6, 6));
@@ -128,87 +137,33 @@ const { Textured_Phong} =defs
 
         // DRAW OBJECTS
         const gray = hex_color("#808080");
-        const darkgray =hex_color("#555555")
+        const darkgray = hex_color("#555555")
         const red = hex_color("#FF0000");
         let model_transform = Mat4.identity();
 
         // TODO: DRAW MAZE
 
 
-          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.5, 2)), this.materials.plastic.override({color:red}));
-
-       this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, 0)),this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -2)), this.materials.plastic.override({color:gray}));
-                 this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -2)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -2)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -4)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -6)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -6)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -6)), this.materials.plastic.override({color:gray}));
-           this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2 ,0, -6)), this.materials.plastic.override({color:gray}));
-
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -6)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -4)), this.materials.plastic.override({color:gray}));
-
-
-          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -2)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -2)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -2)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -4)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -6)), this.materials.plastic.override({color:gray}));
-
-          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -8)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -10)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -10)), this.materials.path_light);
-
-
-        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -10)), this.materials.path_light);
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -12)), this.materials.path_light);
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, -12)), this.materials.path_light);
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -12)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -12)), this.materials.plastic.override({color:gray}));
-        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -14)), this.materials.plastic.override({color:gray}));
-
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -16)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -16)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -18)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(4, 0, -20)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -20)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -20)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -22)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, -22)), this.materials.plastic.override({color:gray}));
-
-        
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -22)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -20)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -18)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -18)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -18)), this.materials.plastic.override({color:gray}));
-
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -20)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -22)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -24)), this.materials.plastic.override({color:gray}));
-        
-        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0.5, -26)), this.materials.plastic.override({color:red}));
-
-        for(let i = 0;i >= -28 ; i=i-2 ){
-            
-            for(let l= 0 ; l <14 ; l= l +2 )
-                {
-                     this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-12, l, i)),this.materials.texture);
-                     this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(8, l, i)), this.materials.texture);
-
-                }
-             
-             
+        // this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.5, 2)), this.materials.plastic.override({color: red}));
+        let maze_coords = [
+            vec3(0,0,0),vec3(0,0,1),vec3(1,0,1),vec3(2,0,1),vec3(2,0,2),vec3(2,0,3),vec3(1,0,3),vec3(0,0,3),vec3(-1,0,3),
+            vec3(-2,0,3),vec3(-2,0,2),
+            vec3(-2,0,1),vec3(-3,0,1),vec3(-4,0,1),vec3(-4,0,2),vec3(-4,0,3),
+            vec3(-4,0,4),vec3(-4,0,5),vec3(-3,0,5),
+            vec3(-2,0,5),vec3(-2,0,6),vec3(-1,0,6),vec3(0,0,6),vec3(1,0,6),vec3(1,0,7),
+            vec3(1,0,8),vec3(2,0,8),vec3(2,0,9),vec3(2,0,10),vec3(1,0,10),vec3(0,0,10),vec3(0,0,11),vec3(-1,0,11),
+            vec3(-2,0,11),vec3(-2,0,10),vec3(-2,0,9),vec3(-3,0,9),vec3(-4,0,9),
+            vec3(-4,0,10),vec3(-4,0,11),vec3(-4,0,12),
+        ];
+        for (let i = 0; i < maze_coords.length; i++) {
+            let x = maze_coords[i][0] * this.BOX_SIZE_units, y = maze_coords[i][1] * this.BOX_SIZE_units,
+                z = -maze_coords[i][2] * this.BOX_SIZE_units;
+            this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: gray}));
         }
+        // this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0.5, -26)), this.materials.plastic.override({color: red}));
 
-        
-        
-
-        
-        
-
+        // DRAW WALLS
+        this.draw_walls(context, program_state);
 
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
