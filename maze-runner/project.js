@@ -4,8 +4,6 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene, Shader, Texture
 } = tiny;
 
-const {Textured_Phong} = defs
-
 export class Project extends Scene {
     /**
      * This Scene object can be added to any display canvas.
@@ -24,13 +22,21 @@ export class Project extends Scene {
             sphere: new defs.Subdivision_Sphere(4),
         };
 
+        this.gray = hex_color("#808080");
+
+        this.light_coords = Vector3.cast(
+            [2,1,3],
+            [-2,1,5],
+            [1,1,10]
+        );
         // *** Materials
+        // TODO: Change materials to add texture etc.
         this.materials = {
             plastic: new Material(new defs.Phong_Shader(),
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
-            path_light: new Material(new Radius_Shader(),
-                {color: hex_color("#808080")}),
-            texture: new Material(new Textured_Phong(), {
+            path_light: new Material(new Radius_Shader(this.light_coords.length),
+                {color: this.gray, specularity: 0}),
+            texture: new Material(new defs.Textured_Phong(), {
                 //color: hex_color("#ffffff"),
                 ambient: 0.4, diffusivity: 0.1, specularity: 0.4,
 
@@ -39,41 +45,38 @@ export class Project extends Scene {
 
         };
 
+        // Variables global to the scene
+
         const data_members = {
             thrust: vec3(0, 0, 0), meters_per_frame: 7, speed_multiplier: 1,
         };
         Object.assign(this, data_members);
 
-        // Variables global to the scene
         // TODO: Tweak the size of sphere and it's location as necessary
         this.avatar_point = vec4(0, 7, 0, 1);
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
             .times(Mat4.scale(0.5, 0.5, 0.5));
 
         this.BOX_SIZE_units = 2;
+
+        this.maze_coords = Vector3.cast(
+            [0,0,0],[0,0,1],[1,0,1],[2,0,1],[2,0,2],[2,0,3],[1,0,3],[0,0,3],[-1,0,3],
+            [-2,0,3],[-2,0,2],
+            [-2,0,1],[-3,0,1],[-4,0,1],[-4,0,2],[-4,0,3],
+            [-4,0,4],[-4,0,5],[-3,0,5],
+            [-2,0,5],[-2,0,6],[-1,0,6],[0,0,6],[1,0,6],[1,0,7],
+            [1,0,8],[2,0,8],[2,0,9],[2,0,10],[1,0,10],[0,0,10],[0,0,11],[-1,0,11],
+            [-2,0,11],[-2,0,10],[-2,0,9],[-3,0,9],[-4,0,9],
+            [-4,0,10],[-4,0,11],[-4,0,12]
+        );
     }
 
     make_control_panel() {
-        // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        // this.key_triggered_button("left", ["h"], () => {
-        //     this.avatar_transform = Mat4.translation(-this.MOVE_RATE, 0, 0).times(this.avatar_transform);
-        //     this.avatar_point[0] -= this.MOVE_RATE;
-        // });
-        //
-        // this.key_triggered_button("right", ["k"], () => {
-        //     this.avatar_transform = Mat4.translation(this.MOVE_RATE, 0, 0).times(this.avatar_transform);
-        //     this.avatar_point[0] += this.MOVE_RATE;
-        // });
-        //
-        // this.key_triggered_button("forward", ["u"], () => {
-        //     this.avatar_transform = Mat4.translation(0, 0, -this.MOVE_RATE).times(this.avatar_transform);
-        //     this.avatar_point[2] -= this.MOVE_RATE;
-        // });
-        //
-        // this.key_triggered_button("back", ["j"], () => {
-        //     this.avatar_transform = Mat4.translation(0, 0, this.MOVE_RATE).times(this.avatar_transform);
-        //     this.avatar_point[2] += this.MOVE_RATE;
-        // });
+        this.live_string(box => box.textContent = "Position: "
+            + this.avatar_point[0].toFixed(2) + ", "
+            + this.avatar_point[1].toFixed(2)
+            + ", " + this.avatar_point[2].toFixed(2));
+        this.new_line();
         this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
         this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
         this.key_triggered_button("Back", ["s"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
@@ -94,15 +97,37 @@ export class Project extends Scene {
         }
     }
 
+    draw_maze(context, program_state, light_radius) {
+        const maze_coords = this.maze_coords;
+        for (let i = 0; i < maze_coords.length; i++) {
+            let x = maze_coords[i][0] * this.BOX_SIZE_units, y = maze_coords[i][1] * this.BOX_SIZE_units,
+                z = -maze_coords[i][2] * this.BOX_SIZE_units;
+            // uncomment the line below to see without darkness
+            // this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
+
+            this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.path_light.override({radius: light_radius}));
+        }
+    }
+
+    set_lights(program_state) {
+        program_state.lights = [];
+        const light_coords = this.light_coords
+        for (let i = 0; i < light_coords.length; i++) {
+            let x = light_coords[i][0] * this.BOX_SIZE_units, y = light_coords[i][1] * this.BOX_SIZE_units,
+                z = -light_coords[i][2] * this.BOX_SIZE_units;
+            program_state.lights.push(new Light(vec4(x,y,z,1), color(1,1,1,1), 1000));
+        }
+    }
+
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
         if (!context.scratchpad.controls) {
             // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
         }
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 
         // MOVE AVATAR AND CAMERA based on key input
-        const dt = program_state.animation_delta_time / 1000;
         const m = this.speed_multiplier * this.meters_per_frame;
         this.avatar_transform.pre_multiply(Mat4.translation(...this.thrust.times(dt * m)));
         this.avatar_point = Mat4.translation(...this.thrust.times(dt * m)).times(this.avatar_point);
@@ -127,43 +152,34 @@ export class Project extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, 1, 100);
 
+        // --------------- LIGHTS ---------------
         // *** Lights: *** Values of vector or point lights.
-        const light_position = vec4(0, 5, 5, 1);
-        program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000),
-            new Light(vec4(-4, 2, -10, 1), color(1, 1, 1, 1), 1000)];
+        // program_state.lights = [
+        //     new Light(vec4(4, 2, -6, 1), color(1, 1, 1, 1), 1000),
+        //     new Light(vec4(-4, 2, -10, 1), color(1, 1, 1, 1), 1000),
+        //     new Light(vec4(2, 2, -20, 1), color(1, 1, 1, 1), 1000),
+        // ];
+        this.set_lights(program_state);
 
-        // this.shapes.cube.draw(context, program_state, Mat4.translation(0, 3, 3), this.materials.path_light);
+        // RADIUS
+        const SWELL_PERIOD_SECONDS = 10;
+        const w = 2 * Math.PI / SWELL_PERIOD_SECONDS;
+        let swell = Math.sin(w*t);
+        let light_radius = 2 * swell + 4;
 
 
-        // DRAW OBJECTS
-        const gray = hex_color("#808080");
-        const darkgray = hex_color("#555555")
+        // --------------- DRAW OBJECTS ---------------
         const red = hex_color("#FF0000");
-        let model_transform = Mat4.identity();
-
-        // TODO: DRAW MAZE
-
-
-        // this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0.5, 2)), this.materials.plastic.override({color: red}));
-        let maze_coords = [
-            vec3(0,0,0),vec3(0,0,1),vec3(1,0,1),vec3(2,0,1),vec3(2,0,2),vec3(2,0,3),vec3(1,0,3),vec3(0,0,3),vec3(-1,0,3),
-            vec3(-2,0,3),vec3(-2,0,2),
-            vec3(-2,0,1),vec3(-3,0,1),vec3(-4,0,1),vec3(-4,0,2),vec3(-4,0,3),
-            vec3(-4,0,4),vec3(-4,0,5),vec3(-3,0,5),
-            vec3(-2,0,5),vec3(-2,0,6),vec3(-1,0,6),vec3(0,0,6),vec3(1,0,6),vec3(1,0,7),
-            vec3(1,0,8),vec3(2,0,8),vec3(2,0,9),vec3(2,0,10),vec3(1,0,10),vec3(0,0,10),vec3(0,0,11),vec3(-1,0,11),
-            vec3(-2,0,11),vec3(-2,0,10),vec3(-2,0,9),vec3(-3,0,9),vec3(-4,0,9),
-            vec3(-4,0,10),vec3(-4,0,11),vec3(-4,0,12),
-        ];
-        for (let i = 0; i < maze_coords.length; i++) {
-            let x = maze_coords[i][0] * this.BOX_SIZE_units, y = maze_coords[i][1] * this.BOX_SIZE_units,
-                z = -maze_coords[i][2] * this.BOX_SIZE_units;
-            this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: gray}));
-        }
-        // this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0.5, -26)), this.materials.plastic.override({color: red}));
 
         // DRAW WALLS
         this.draw_walls(context, program_state);
+
+        // DRAW MAZE
+        this.draw_maze(context, program_state, light_radius);
+
+        // Red end caps
+        this.shapes.cube.draw(context, program_state, Mat4.translation(0, 0.5, 2), this.materials.plastic.override({color: red}));
+        this.shapes.cube.draw(context, program_state, Mat4.translation(-8, 0.5, -26), this.materials.plastic.override({color: red}));
 
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
@@ -255,24 +271,25 @@ class Radius_Shader extends Shader {
         // A fragment is a pixel that's overlapped by the current triangle.
         // Fragments affect the final image or get discarded due to depth.
         return this.shared_glsl_code() + `
+                uniform float radius;
                 void main(){
-                    gl_FragColor = vec4(0, 0, 0, 1);
+                    gl_FragColor = vec4(0, 0, 0, 0);
                     for(int i = 0; i < N_LIGHTS; i++) {                                            
                         float distance_to_light = distance(light_positions_or_vectors[i].xyz, point_position.xyz);
-                        if (distance_to_light < 2.0) { // TODO: fucking help me
+                        if (distance_to_light < radius) { // TODO: fucking help me
                             // Compute an initial (ambient) color:
                             gl_FragColor = vec4( shape_color.xyz * ambient, shape_color.w );
                             // Compute the final color with contributions from lights:
                             gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
                         }
                     }
-                    
-                  } `;
+                } `;
     }
 
     send_material(gl, gpu, material) {
         // send_material(): Send the desired shape-wide material qualities to the
         // graphics card, where they will tweak the Phong lighting formula.
+        gl.uniform1f(gpu.radius, material.radius);
         gl.uniform4fv(gpu.shape_color, material.color);
         gl.uniform1f(gpu.ambient, material.ambient);
         gl.uniform1f(gpu.diffusivity, material.diffusivity);
