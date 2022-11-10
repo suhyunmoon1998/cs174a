@@ -35,7 +35,7 @@ export class Project extends Scene {
 
         // Variables global to the scene
         // TODO: Tweak the size of sphere and it's location as necessary
-        this.avatar_point = vec4(0, 1.5, 0, 1);
+        this.avatar_point = vec4(0, 7, 0, 1);
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
             .times(Mat4.scale(0.5, 0.5, 0.5));
 
@@ -66,6 +66,7 @@ export class Project extends Scene {
         this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
         this.key_triggered_button("Back", ["s"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
         this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
+        //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
     display(context, program_state) {
         // display():  Called once per frame of animation.
@@ -76,6 +77,18 @@ export class Project extends Scene {
         const m = this.speed_multiplier * this.meters_per_frame;
         this.avatar_transform.pre_multiply(Mat4.translation(...this.thrust.times(dt*m)));
         this.avatar_point = Mat4.translation(...this.thrust.times(dt*m)).times(this.avatar_point);
+
+        // TODO: Apply gravity on the ball
+        let gravity;
+        if(this.avatar_point[1] <= 1.5) {
+            this.thrust[1] = 0;
+            this.avatar_point[1] = 1.5;
+            gravity = 0;
+        }
+        else {
+            gravity = 0.02;
+        }
+        this.thrust[1] -= gravity;
 
         // TODO: Tweak eye point as necessary to make the game look good
         let eye_point = (this.avatar_point.to3()).plus(vec3(0, 3.6, 6));
