@@ -76,9 +76,13 @@ export class Project extends Scene {
         if (!context.scratchpad.controls) {
             // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
         }
-
+        const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         // MOVE AVATAR AND CAMERA based on key input
-        const dt = program_state.animation_delta_time / 1000;
+        const SWELL_PERIOD_SECONDS = 10;
+        const w = 2 * Math.PI / SWELL_PERIOD_SECONDS;
+        let swell = Math.sin(w*t);
+        let light_radius = 2 * swell + 4;
+
         const m = this.speed_multiplier * this.meters_per_frame;
         this.avatar_transform.pre_multiply(Mat4.translation(...this.thrust.times(dt*m)));
         this.avatar_point = Mat4.translation(...this.thrust.times(dt*m)).times(this.avatar_point);
@@ -144,12 +148,12 @@ export class Project extends Scene {
 
           this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -8)), this.materials.plastic.override({color:gray}));
          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-8, 0, -10)), this.materials.plastic.override({color:gray}));
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -10)), this.materials.path_light);
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-6, 0, -10)), this.materials.path_light.override({radius: light_radius}));
 
 
-        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -10)), this.materials.path_light);
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -12)), this.materials.path_light);
-         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, -12)), this.materials.path_light);
+        this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -10)), this.materials.path_light.override({radius: light_radius}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-4, 0, -12)), this.materials.path_light.override({radius: light_radius}));
+         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(-2, 0, -12)), this.materials.path_light.override({radius: light_radius}));
          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 0, -12)), this.materials.plastic.override({color:gray}));
          this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -12)), this.materials.plastic.override({color:gray}));
         this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(2, 0, -14)), this.materials.plastic.override({color:gray}));
@@ -285,11 +289,12 @@ class Radius_Shader extends Shader {
         // A fragment is a pixel that's overlapped by the current triangle.
         // Fragments affect the final image or get discarded due to depth.
         return this.shared_glsl_code() + `
+                uniform float radius;
                 void main(){
                     gl_FragColor = vec4(0, 0, 0, 1);
                     for(int i = 0; i < N_LIGHTS; i++) {                                            
                         float distance_to_light = distance(light_positions_or_vectors[i].xyz, point_position.xyz);
-                        if (distance_to_light < 2.0) { // TODO: fucking help me
+                        if (distance_to_light < radius) { // TODO: fucking help me
                             // Compute an initial (ambient) color:
                             gl_FragColor = vec4( shape_color.xyz * ambient, shape_color.w );
                             // Compute the final color with contributions from lights:
@@ -303,6 +308,7 @@ class Radius_Shader extends Shader {
     send_material(gl, gpu, material) {
         // send_material(): Send the desired shape-wide material qualities to the
         // graphics card, where they will tweak the Phong lighting formula.
+        gl.uniform1f(gpu.radius, material.radius);
         gl.uniform4fv(gpu.shape_color, material.color);
         gl.uniform1f(gpu.ambient, material.ambient);
         gl.uniform1f(gpu.diffusivity, material.diffusivity);
