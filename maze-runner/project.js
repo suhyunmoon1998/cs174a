@@ -58,6 +58,21 @@ export class Project extends Scene {
             .times(Mat4.scale(0.5, 0.5, 0.5));
 
         this.BOX_SIZE_units = 2;
+        
+        
+        this.random_1= [];
+        for (let i = 0; i < 4; i++) {
+            this.random_1.push(Math.random() < 0.5 ? -1 : 1);
+        }
+        
+
+        this.random_2= [] ;
+        for(let j = 1; j <10 ; j++){
+
+            this.random_2.push(Math.floor(Math.random() * (3 - (-5) + 1) ) + (-5));
+        }
+
+        
 
         this.maze_coords = Vector3.cast(
             
