@@ -110,6 +110,8 @@ export class Project extends Scene {
         this.set_last_time = false;
         this.last_time_all_visible = 0;
         this.start_time_all_visible = 0;
+
+        this.start_game = false;
     }
 
     make_control_panel() {
@@ -122,6 +124,12 @@ export class Project extends Scene {
         this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
         this.key_triggered_button("Back", ["s"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
         this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
+        this.new_line();
+        this.key_triggered_button("Start game", ["Enter"], () => {
+            document.getElementById("start").style.display = "none";
+            this.start_game = true;
+        }
+        );
         //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
     draw_walls(context, program_state) {
@@ -163,8 +171,8 @@ export class Project extends Scene {
     display(context, program_state) {
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
-        if (!context.scratchpad.controls) {
-            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+        if (!this.start_game) {
+            return;
         }
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
 

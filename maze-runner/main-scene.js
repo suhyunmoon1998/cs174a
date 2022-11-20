@@ -27,4 +27,4 @@ Object.assign(defs, {Project});
 const Main_Scene = Project;
 const Additional_Scenes = [];
 
-export {Main_Scene, Additional_Scenes, Canvas_Widget, Code_Widget, Text_Widget, defs}
+export {Main_Scene, Additional_Scenes, Canvas_Widget, Text_Widget, defs}

@@ -5,11 +5,21 @@
 <html lang="En">
 <head>
     <meta charset="UTF-8"/>
-    <link href="assets/fav.ico" rel="icon">
-    <title>Tiny Graphics</title>
+    <link href="assets/favicon.ico" rel="icon">
+    <title>Dark Dungeon Roll</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <script>
+        document.styleSheets[0] = "style.css";
+    </script>
 </head>
-<body style="background: White">
+<body style="background: Black">
 <!-- Begin typing your web page here. -->
+
+<div id="start">
+    <p>Dark Dungeon Roll<sup>1</sup></p>
+    <p>Press Enter to Start</p>
+</div>
+
 <!-- The following code embeds a WebGL canvas panel, loads certain scene(s), and displays panel(s) of their controls.-->
 <div class="canvas-widget" id="main-canvas"></div>
 <script type=module>

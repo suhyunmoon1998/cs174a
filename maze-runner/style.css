@@ -1,0 +1,15 @@
+@font-face{
+    font-family: '8bitwonder';
+    src: url(assets/8bitwonder.TTF);
+}
+
+#start {
+    text-align: center;
+    color: white;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: '8bitwonder';
+    font-size: 27px;
+}
