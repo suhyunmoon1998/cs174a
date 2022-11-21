@@ -53,9 +53,11 @@ export class Project extends Scene {
         Object.assign(this, data_members);
 
         // TODO: Tweak the size of sphere and it's location as necessary
-        this.avatar_point = vec4(0, 7, 0, 1);
+        this.sphere_radius = 0.5;
+        this.starting_pos = vec4(0, 7, 0, 1)
+        this.avatar_point = this.starting_pos;
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
-            .times(Mat4.scale(0.5, 0.5, 0.5));
+            .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
 
         this.BOX_SIZE_units = 2;
         
@@ -79,29 +81,29 @@ export class Project extends Scene {
             
             
             [0,0,1],[this.random_1[1],0,1],[this.random_1[1],0,2],
-           [-5,0,3], [-4,0,3],[-3,0,3], [-2,0,3], [-1,0,3], [0,0,3], [1,0,3],[2,0,3],[3,0,3],    
-            [this.random_2[1],0,4], 
+           [-5,0,3], [-4,0,3],[-3,0,3], [-2,0,3], [-1,0,3], [0,0,3], [1,0,3],[2,0,3],[3,0,3],
+            [this.random_2[1],0,4],
            [-5,0,5],[-4,0,5],[-3,0,5], [-2,0,5], [-1,0,5], [0,0,5], [1,0,5],[2,0,5],[3,0,5],
-             [this.random_2[2],0,6], 
+             [this.random_2[2],0,6],
            [-5,0,7],[-4,0,7],[-3,0,7], [-2,0,7], [-1,0,7], [0,0,7], [1,0,7],[2,0,7],[3,0,7],
-             [this.random_2[3],0,8], 
+             [this.random_2[3],0,8],
            [-5,0,9],[-4,0,9],[-3,0,9], [-2,0,9], [-1,0,9], [0,0,9], [1,0,9],[2,0,9],[3,0,9],
-             [this.random_2[4],0,10], 
+             [this.random_2[4],0,10],
             [-5,0,11],[-4,0,11],[-3,0,11], [-2,0,11], [-1,0,11], [0,0,11], [1,0,11],[2,0,11],[3,0,11],
           [this.random_2[5],0,12],
             [-5,0,13],[-4,0,13],[-3,0,13], [-2,0,13], [-1,0,13], [0,0,13], [1,0,13],[2,0,13],[3,0,13]
-       
+
            
-            /*
-            [0,0,0],[0,0,1],[1,0,1],[2,0,1],[2,0,2],[2,0,3],[1,0,3],[0,0,3],[-1,0,3],
-            [-2,0,3],[-2,0,2],
-            [-2,0,1],[-3,0,1],[-4,0,1],[-4,0,2],[-4,0,3],
-            [-4,0,4],[-4,0,5],[-3,0,5],
-            [-2,0,5],[-2,0,6],[-1,0,6],[0,0,6],[1,0,6],[1,0,7],
-            [1,0,8],[2,0,8],[2,0,9],[2,0,10],[1,0,10],[0,0,10],[0,0,11],[-1,0,11],
-            [-2,0,11],[-2,0,10],[-2,0,9],[-3,0,9],[-4,0,9],
-            [-4,0,10],[-4,0,11],[-4,0,12]
-            */
+
+            // [0,0,0],[0,0,1],[1,0,1],[2,0,1],[2,0,2],[2,0,3],[1,0,3],[0,0,3],[-1,0,3],
+            // [-2,0,3],[-2,0,2],
+            // [-2,0,1],[-3,0,1],[-4,0,1],[-4,0,2],[-4,0,3],
+            // [-4,0,4],[-4,0,5],[-3,0,5],
+            // [-2,0,5],[-2,0,6],[-1,0,6],[0,0,6],[1,0,6],[1,0,7],
+            // [1,0,8],[2,0,8],[2,0,9],[2,0,10],[1,0,10],[0,0,10],[0,0,11],[-1,0,11],
+            // [-2,0,11],[-2,0,10],[-2,0,9],[-3,0,9],[-4,0,9],
+            // [-4,0,10],[-4,0,11],[-4,0,12]
+
         );
 
         this.ALL_VISIBLE_INTERVAL = 4.0;
@@ -153,7 +155,7 @@ export class Project extends Scene {
             let x = maze_coords[i][0] * this.BOX_SIZE_units, y = maze_coords[i][1] * this.BOX_SIZE_units,
                 z = -maze_coords[i][2] * this.BOX_SIZE_units;
             // uncomment the line below to see without darkness
-            // this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
+            //this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
             this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.path_light.override({radius: light_radius}));
         }
     }
@@ -183,15 +185,71 @@ export class Project extends Scene {
 
         // TODO: Apply gravity on the ball
         let gravity;
-        if (this.avatar_point[1] <= 1.5) {
-            this.thrust[1] = 0;
-            this.avatar_point[1] = 1.5;
-            gravity = 0;
-        } else {
-            gravity = 0.02;
-        }
+        gravity = 0.02;
         this.thrust[1] -= gravity;
 
+
+        // TODO: Collision Detection
+        const maze_coords = this.maze_coords;
+        for (let i = 0; i < maze_coords.length; i++) {
+            let box_maxX = (maze_coords[i][0] + 0.5) * this.BOX_SIZE_units;
+            let box_minX = (maze_coords[i][0] - 0.5) * this.BOX_SIZE_units;
+            let box_maxY = (maze_coords[i][1] + 0.5) * this.BOX_SIZE_units;
+            let box_minY = (maze_coords[i][1] - 0.5) * this.BOX_SIZE_units;
+            let box_maxZ = (-maze_coords[i][2] + 0.5) * this.BOX_SIZE_units;
+            let box_minZ = (-maze_coords[i][2] - 0.5) * this.BOX_SIZE_units;
+            let x = Math.max(box_minX, Math.min(this.avatar_point[0], box_maxX));
+            let y = Math.max(box_minY, Math.min(this.avatar_point[1], box_maxY));
+            let z = Math.max(box_minZ, Math.min(this.avatar_point[2], box_maxZ));
+            let distance = Math.sqrt(
+                (x - this.avatar_point[0]) * (x - this.avatar_point[0]) +
+                (y - this.avatar_point[1]) * (y - this.avatar_point[1]) +
+                (z - this.avatar_point[2]) * (z - this.avatar_point[2])
+            );
+            let overlap = this.sphere_radius - distance;
+            if (distance < this.sphere_radius){
+                if(this.thrust[1] < 0 && this.avatar_point[1] > 0.7*this.BOX_SIZE_units) {
+                        this.avatar_point[1] += overlap;
+                        this.thrust[1] = 0;
+                }
+                if(this.thrust[0] > 0) {
+                    this.avatar_point[0] -= overlap;
+                }
+                if(this.thrust[0] < 0) {
+                    this.avatar_point[0] += overlap;
+                }
+                if(this.thrust[2] > 0) {
+                    this.avatar_point[2] -= overlap;
+                }
+                if(this.thrust[2] < 0) {
+                    this.avatar_point[2] += overlap;
+                }
+                this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
+                    .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
+            }
+        }
+        let overlap_rwall = (this.avatar_point[0] + this.sphere_radius) - (8 - 0.5 * this.BOX_SIZE_units);
+        let overlap_lwall = (-12 + 0.5 * this.BOX_SIZE_units) - (this.avatar_point[0] - this.sphere_radius);
+        if (this.thrust[0] > 0 && overlap_rwall > 0)
+        {
+            this.avatar_point[0] -= overlap_rwall;
+        }
+        if (this.thrust[0] < 0 && overlap_lwall > 0)
+        {
+            this.avatar_point[0] += overlap_lwall;
+        }
+        this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
+            .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
+
+
+
+        // TODO: resets position if the ball fell to certain height
+        if (this.avatar_point[1] <= -3) {
+            this.thrust[1] = 0;
+            this.avatar_point = this.starting_pos;
+            this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
+                .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
+        }
 
         // TODO: Tweak eye point as necessary to make the game look good
         let eye_point = (this.avatar_point.to3()).plus(vec3(0, 3.6, 6));
@@ -243,6 +301,8 @@ export class Project extends Scene {
 
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
+
+
     }
 }
 
