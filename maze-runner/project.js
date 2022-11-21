@@ -54,7 +54,7 @@ export class Project extends Scene {
 
         // TODO: Tweak the size of sphere and it's location as necessary
         this.sphere_radius = 0.5;
-        this.starting_pos = vec4(0, 7, 0, 1)
+        this.starting_pos = vec4(0, 5, 0, 1)
         this.avatar_point = this.starting_pos;
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
             .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
@@ -79,7 +79,7 @@ export class Project extends Scene {
         this.maze_coords = Vector3.cast(
             
             
-            
+            [0, 0, 0],
             [0,0,1],[this.random_1[1],0,1],[this.random_1[1],0,2],
            [-5,0,3], [-4,0,3],[-3,0,3], [-2,0,3], [-1,0,3], [0,0,3], [1,0,3],[2,0,3],[3,0,3],
             [this.random_2[1],0,4],
@@ -155,7 +155,7 @@ export class Project extends Scene {
             let x = maze_coords[i][0] * this.BOX_SIZE_units, y = maze_coords[i][1] * this.BOX_SIZE_units,
                 z = -maze_coords[i][2] * this.BOX_SIZE_units;
             // uncomment the line below to see without darkness
-            //this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
+            // this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
             this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.path_light.override({radius: light_radius}));
         }
     }
@@ -185,7 +185,7 @@ export class Project extends Scene {
 
         // TODO: Apply gravity on the ball
         let gravity;
-        gravity = 0.02;
+        gravity = 0.05;
         this.thrust[1] -= gravity;
 
 
@@ -208,7 +208,7 @@ export class Project extends Scene {
             );
             let overlap = this.sphere_radius - distance;
             if (distance < this.sphere_radius){
-                if(this.thrust[1] < 0 && this.avatar_point[1] > 0.7*this.BOX_SIZE_units) {
+                if(this.thrust[1] < 0 && this.avatar_point[1] > 0.5*this.BOX_SIZE_units) {
                         this.avatar_point[1] += overlap;
                         this.thrust[1] = 0;
                 }
