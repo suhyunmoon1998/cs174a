@@ -25,10 +25,10 @@ export class Project extends Scene {
         this.gray = hex_color("#808080");
 
         this.light_coords = Vector3.cast(
-             [2,1,3],
-            [-2,1,5],
-            [-3,1,9],
-             [2,1,7]
+            [2, 1, 3],
+            [-2, 1, 5],
+            [-3, 1, 9],
+            [2, 1, 7]
         );
 
         // *** Materials
@@ -41,7 +41,7 @@ export class Project extends Scene {
             wall: new Material(new Textured_Phong, {
                 ambient: 0.1, diffusivity: 0.2, specularity: 0.,
                 texture: new Texture("assets/wall_stones.jpeg"),
-                color: color(0,0,0,1),
+                color: color(0, 0, 0, 1),
             })
         };
 
@@ -60,52 +60,10 @@ export class Project extends Scene {
             .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
 
         this.BOX_SIZE_units = 2;
-        
-        
-        this.random_1= [];
-        for (let i = 0; i < 4; i++) {
-            this.random_1.push(Math.random() < 0.5 ? -1 : 1);
-        }
-        
 
-        this.random_2= [] ;
-        for(let j = 1; j <10 ; j++){
+        this.generate_maze();
 
-            this.random_2.push(Math.floor(Math.random() * (3 - (-5) + 1) ) + (-5));
-        }
-
-        
-
-        this.maze_coords = Vector3.cast(
-            
-            
-            [0, 0, 0],
-            [0,0,1],[this.random_1[1],0,1],[this.random_1[1],0,2],
-           [-5,0,3], [-4,0,3],[-3,0,3], [-2,0,3], [-1,0,3], [0,0,3], [1,0,3],[2,0,3],[3,0,3],
-            [this.random_2[1],0,4],
-           [-5,0,5],[-4,0,5],[-3,0,5], [-2,0,5], [-1,0,5], [0,0,5], [1,0,5],[2,0,5],[3,0,5],
-             [this.random_2[2],0,6],
-           [-5,0,7],[-4,0,7],[-3,0,7], [-2,0,7], [-1,0,7], [0,0,7], [1,0,7],[2,0,7],[3,0,7],
-             [this.random_2[3],0,8],
-           [-5,0,9],[-4,0,9],[-3,0,9], [-2,0,9], [-1,0,9], [0,0,9], [1,0,9],[2,0,9],[3,0,9],
-             [this.random_2[4],0,10],
-            [-5,0,11],[-4,0,11],[-3,0,11], [-2,0,11], [-1,0,11], [0,0,11], [1,0,11],[2,0,11],[3,0,11],
-          [this.random_2[5],0,12],
-            [-5,0,13],[-4,0,13],[-3,0,13], [-2,0,13], [-1,0,13], [0,0,13], [1,0,13],[2,0,13],[3,0,13]
-
-           
-
-            // [0,0,0],[0,0,1],[1,0,1],[2,0,1],[2,0,2],[2,0,3],[1,0,3],[0,0,3],[-1,0,3],
-            // [-2,0,3],[-2,0,2],
-            // [-2,0,1],[-3,0,1],[-4,0,1],[-4,0,2],[-4,0,3],
-            // [-4,0,4],[-4,0,5],[-3,0,5],
-            // [-2,0,5],[-2,0,6],[-1,0,6],[0,0,6],[1,0,6],[1,0,7],
-            // [1,0,8],[2,0,8],[2,0,9],[2,0,10],[1,0,10],[0,0,10],[0,0,11],[-1,0,11],
-            // [-2,0,11],[-2,0,10],[-2,0,9],[-3,0,9],[-4,0,9],
-            // [-4,0,10],[-4,0,11],[-4,0,12]
-
-        );
-
+        // RADIUS LIGHT VARIABLES
         this.ALL_VISIBLE_INTERVAL = 4.0;
         this.ALL_VISIBLE_TIME = 1.0;
         this.all_visible = false;
@@ -113,13 +71,57 @@ export class Project extends Scene {
         this.last_time_all_visible = 0;
         this.start_time_all_visible = 0;
 
+        // GAME LOGISTIC VARIABLES
         this.start_game = false;
+        this.lives = 3;
+        this.time_offset = null;
+        this.time_left = 60;
+    }
+
+    generate_maze() {
+        this.random_1 = [];
+        for (let i = 0; i < 4; i++) {
+            this.random_1.push(Math.random() < 0.5 ? -1 : 1);
+        }
+
+
+        this.random_2 = [];
+        for (let j = 1; j < 10; j++) {
+
+            this.random_2.push(Math.floor(Math.random() * (3 - (-5) + 1)) + (-5));
+        }
+
+
+        this.maze_coords = Vector3.cast(
+            [0, 0, 0],
+            [0, 0, 1], [this.random_1[1], 0, 1], [this.random_1[1], 0, 2],
+            [-5, 0, 3], [-4, 0, 3], [-3, 0, 3], [-2, 0, 3], [-1, 0, 3], [0, 0, 3], [1, 0, 3], [2, 0, 3], [3, 0, 3],
+            [this.random_2[1], 0, 4],
+            [-5, 0, 5], [-4, 0, 5], [-3, 0, 5], [-2, 0, 5], [-1, 0, 5], [0, 0, 5], [1, 0, 5], [2, 0, 5], [3, 0, 5],
+            [this.random_2[2], 0, 6],
+            [-5, 0, 7], [-4, 0, 7], [-3, 0, 7], [-2, 0, 7], [-1, 0, 7], [0, 0, 7], [1, 0, 7], [2, 0, 7], [3, 0, 7],
+            [this.random_2[3], 0, 8],
+            [-5, 0, 9], [-4, 0, 9], [-3, 0, 9], [-2, 0, 9], [-1, 0, 9], [0, 0, 9], [1, 0, 9], [2, 0, 9], [3, 0, 9],
+            [this.random_2[4], 0, 10],
+            [-5, 0, 11], [-4, 0, 11], [-3, 0, 11], [-2, 0, 11], [-1, 0, 11], [0, 0, 11], [1, 0, 11], [2, 0, 11], [3, 0, 11],
+            [this.random_2[5], 0, 12],
+            [-5, 0, 13], [-4, 0, 13], [-3, 0, 13], [-2, 0, 13], [-1, 0, 13], [0, 0, 13], [1, 0, 13], [2, 0, 13], [3, 0, 13]
+        );
+
+        // [0,0,0],[0,0,1],[1,0,1],[2,0,1],[2,0,2],[2,0,3],[1,0,3],[0,0,3],[-1,0,3],
+        // [-2,0,3],[-2,0,2],
+        // [-2,0,1],[-3,0,1],[-4,0,1],[-4,0,2],[-4,0,3],
+        // [-4,0,4],[-4,0,5],[-3,0,5],
+        // [-2,0,5],[-2,0,6],[-1,0,6],[0,0,6],[1,0,6],[1,0,7],
+        // [1,0,8],[2,0,8],[2,0,9],[2,0,10],[1,0,10],[0,0,10],[0,0,11],[-1,0,11],
+        // [-2,0,11],[-2,0,10],[-2,0,9],[-3,0,9],[-4,0,9],
+        // [-4,0,10],[-4,0,11],[-4,0,12]
     }
 
     make_control_panel() {
         this.live_string(box => box.textContent = "Position: "
             + this.avatar_point[0].toFixed(2) + ", "
-            + this.avatar_point[1].toFixed(2)+ ", "
+            + this.avatar_point[1].toFixed(2) + ", "
             + this.avatar_point[2].toFixed(2));
         this.new_line();
         this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
@@ -128,12 +130,16 @@ export class Project extends Scene {
         this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
         this.new_line();
         this.key_triggered_button("Start game", ["Enter"], () => {
-            document.getElementById("start").style.display = "none";
-            this.start_game = true;
-        }
+                const titles = Array.from(document.getElementsByClassName("title-card"));
+                titles.forEach(el => el.style.display = "none");
+                const ui = Array.from(document.getElementsByClassName("interface"));
+                ui.forEach(el => el.style.display = "block");
+                this.start_game = true;
+            }
         );
         //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
+
     draw_walls(context, program_state) {
         const LEFT_WALL_X_LOCATION = -12;
         const RIGHT_WALL_X_LOCATION = 8
@@ -141,8 +147,8 @@ export class Project extends Scene {
         const WALL_DEPTH_boxes = 14;
         const WALL_HEIGHT_boxes = 7;
         const WALL_DEEP_START = -4 * BOX_SIZE_units;
-        for (let d = 0; d >= -(WALL_DEPTH_boxes*BOX_SIZE_units); d -= BOX_SIZE_units) {
-            for (let h = WALL_DEEP_START; h < (WALL_HEIGHT_boxes*BOX_SIZE_units); h += BOX_SIZE_units) {
+        for (let d = 0; d >= -(WALL_DEPTH_boxes * BOX_SIZE_units); d -= BOX_SIZE_units) {
+            for (let h = WALL_DEEP_START; h < (WALL_HEIGHT_boxes * BOX_SIZE_units); h += BOX_SIZE_units) {
                 this.shapes.cube.draw(context, program_state, Mat4.translation(LEFT_WALL_X_LOCATION, h, d), this.materials.wall);
                 this.shapes.cube.draw(context, program_state, Mat4.translation(RIGHT_WALL_X_LOCATION, h, d), this.materials.wall);
             }
@@ -156,7 +162,7 @@ export class Project extends Scene {
                 z = -maze_coords[i][2] * this.BOX_SIZE_units;
             // uncomment the line below to see without darkness
             // this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
-            this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.path_light.override({radius: light_radius}));
+            this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z), this.materials.path_light.override({radius: light_radius}));
         }
     }
 
@@ -166,7 +172,7 @@ export class Project extends Scene {
         for (let i = 0; i < light_coords.length; i++) {
             let x = light_coords[i][0] * this.BOX_SIZE_units, y = light_coords[i][1] * this.BOX_SIZE_units,
                 z = -light_coords[i][2] * this.BOX_SIZE_units;
-            program_state.lights.push(new Light(vec4(x,y,z,1), hex_color("#b0f542"), 1000));
+            program_state.lights.push(new Light(vec4(x, y, z, 1), hex_color("#b0f542"), 1000));
         }
     }
 
@@ -177,6 +183,28 @@ export class Project extends Scene {
             return;
         }
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+        if (this.start_game && !this.time_offset) {
+            this.time_offset = Math.floor(t);
+        }
+        this.time_left = 60 - Math.floor(t) + this.time_offset;
+
+        // END GAME
+        if (this.lives <= 0 || this.time_left <= 0) {
+            this.start_game = false;
+            this.time_offset = null;
+            this.lives = 3;
+            this.generate_maze();
+
+            document.getElementById("game-over").style.display = "block";
+            const ui = Array.from(document.getElementsByClassName("interface"));
+            ui.forEach(el => el.style.display = "none");
+
+            this.avatar_point = this.starting_pos;
+            this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
+                .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
+
+            return;
+        }
 
         // MOVE AVATAR AND CAMERA based on key input
         const m = this.speed_multiplier * this.meters_per_frame;
@@ -207,21 +235,21 @@ export class Project extends Scene {
                 (z - this.avatar_point[2]) * (z - this.avatar_point[2])
             );
             let overlap = this.sphere_radius - distance;
-            if (distance < this.sphere_radius){
-                if(this.thrust[1] < 0 && this.avatar_point[1] > 0.5*this.BOX_SIZE_units) {
-                        this.avatar_point[1] += overlap;
-                        this.thrust[1] = 0;
+            if (distance < this.sphere_radius) {
+                if (this.thrust[1] < 0 && this.avatar_point[1] > 0.5 * this.BOX_SIZE_units) {
+                    this.avatar_point[1] += overlap;
+                    this.thrust[1] = 0;
                 }
-                if(this.thrust[0] > 0) {
+                if (this.thrust[0] > 0) {
                     this.avatar_point[0] -= overlap;
                 }
-                if(this.thrust[0] < 0) {
+                if (this.thrust[0] < 0) {
                     this.avatar_point[0] += overlap;
                 }
-                if(this.thrust[2] > 0) {
+                if (this.thrust[2] > 0) {
                     this.avatar_point[2] -= overlap;
                 }
-                if(this.thrust[2] < 0) {
+                if (this.thrust[2] < 0) {
                     this.avatar_point[2] += overlap;
                 }
                 this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
@@ -230,25 +258,23 @@ export class Project extends Scene {
         }
         let overlap_rwall = (this.avatar_point[0] + this.sphere_radius) - (8 - 0.5 * this.BOX_SIZE_units);
         let overlap_lwall = (-12 + 0.5 * this.BOX_SIZE_units) - (this.avatar_point[0] - this.sphere_radius);
-        if (this.thrust[0] > 0 && overlap_rwall > 0)
-        {
+        if (this.thrust[0] > 0 && overlap_rwall > 0) {
             this.avatar_point[0] -= overlap_rwall;
         }
-        if (this.thrust[0] < 0 && overlap_lwall > 0)
-        {
+        if (this.thrust[0] < 0 && overlap_lwall > 0) {
             this.avatar_point[0] += overlap_lwall;
         }
         this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
             .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
 
 
-
-        // TODO: resets position if the ball fell to certain height
+        // TODO: resets position if the ball fell to certain height. Also decrements lives
         if (this.avatar_point[1] <= -3) {
             this.thrust[1] = 0;
             this.avatar_point = this.starting_pos;
             this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
                 .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
+            this.lives -= 1;
         }
 
         // TODO: Tweak eye point as necessary to make the game look good
@@ -266,7 +292,7 @@ export class Project extends Scene {
         // RADIUS
         const SWELL_PERIOD_SECONDS = 5;
         const w = 2 * Math.PI / SWELL_PERIOD_SECONDS;
-        let swell = Math.sin(w*t);
+        let swell = Math.sin(w * t);
         let light_radius = swell + 2.5;
 
         if (!this.set_last_time) {
@@ -302,6 +328,9 @@ export class Project extends Scene {
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
 
+
+        document.getElementById("lives").innerHTML = this.lives;
+        document.getElementById("timer").innerHTML = this.time_left;
 
     }
 }
@@ -355,6 +384,7 @@ class Textured_Phong extends defs.Phong_Shader {
                     return result;
                   } `;
     }
+
     vertex_glsl_code() {
         // ********* VERTEX SHADER *********
         return this.shared_glsl_code() + `
@@ -414,6 +444,7 @@ class Radius_Shader extends Textured_Phong {
         super.send_material(gl, gpu, material);
         gl.uniform1f(gpu.radius, material.radius);
     }
+
     shared_glsl_code() {
         // ********* SHARED CODE, INCLUDED IN BOTH SHADERS *********
         return ` precision mediump float;
@@ -460,6 +491,7 @@ class Radius_Shader extends Textured_Phong {
                     return result;
                   } `;
     }
+
     vertex_glsl_code() {
         // ********* VERTEX SHADER *********
         return this.shared_glsl_code() + `
@@ -483,6 +515,7 @@ class Radius_Shader extends Textured_Phong {
                     f_tex_coord = texture_coord;
                   } `;
     }
+
     fragment_glsl_code() {
         // ********* FRAGMENT SHADER *********
         // A fragment is a pixel that's overlapped by the current triangle.

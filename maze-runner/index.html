@@ -14,12 +14,29 @@
 </head>
 <body style="background: Black">
 <!-- Begin typing your web page here. -->
+<div class="interface" id="lives-display">
+    <p>Lives: <span id="lives">3</span></p>
+</div>
 
-<div id="start">
+<div class="interface" id="timer-display">
+    <p>Time left: <span id="timer">60</span></p>
+</div>
+
+<div class="title-card" id="start">
     <p>Dark Dungeon Roll<sup>1</sup></p>
     <p>Press Enter to Start</p>
 </div>
 
+
+<div class="title-card" id="game-over">
+    <p>Game Over</p>
+    <p>Press Enter for New Game</p>
+</div>
+
+<div class="title-card" id="game-win">
+    <p>Game Over</p>
+    <p>Press Enter for New Game</p>
+</div>
 <!-- The following code embeds a WebGL canvas panel, loads certain scene(s), and displays panel(s) of their controls.-->
 <div class="canvas-widget" id="main-canvas"></div>
 <script type=module>
