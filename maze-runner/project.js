@@ -38,6 +38,9 @@ export class Project extends Scene {
                 {ambient: .4, diffusivity: .6, color: hex_color("#ffffff")}),
             path_light: new Material(new Radius_Shader(this.light_coords.length),
                 {color: this.gray, specularity: 0}),
+            regular_light: new Material(new Textured_Phong,
+                {color: color(0, 0, 0, 1), specularity: 0., ambient: 0.05,
+                texture: new Texture("assets/wall_stones.jpeg")}),
             wall: new Material(new Textured_Phong, {
                 ambient: 0.1, diffusivity: 0.2, specularity: 0.,
                 texture: new Texture("assets/wall_stones.jpeg"),
@@ -76,6 +79,7 @@ export class Project extends Scene {
         this.lives = 3;
         this.time_offset = null;
         this.time_left = 60;
+        this.game_win = false;
     }
 
     generate_maze() {
@@ -84,13 +88,10 @@ export class Project extends Scene {
             this.random_1.push(Math.random() < 0.5 ? -1 : 1);
         }
 
-
         this.random_2 = [];
         for (let j = 1; j < 10; j++) {
-
             this.random_2.push(Math.floor(Math.random() * (3 - (-5) + 1)) + (-5));
         }
-
 
         this.maze_coords = Vector3.cast(
             [0, 0, 0],
@@ -107,6 +108,9 @@ export class Project extends Scene {
             [this.random_2[5], 0, 12],
             [-5, 0, 13], [-4, 0, 13], [-3, 0, 13], [-2, 0, 13], [-1, 0, 13], [0, 0, 13], [1, 0, 13], [2, 0, 13], [3, 0, 13]
         );
+
+        this.end_point = vec3(this.random_2[6], 0.5, -26);
+        console.log(this.end_point);
 
         // [0,0,0],[0,0,1],[1,0,1],[2,0,1],[2,0,2],[2,0,3],[1,0,3],[0,0,3],[-1,0,3],
         // [-2,0,3],[-2,0,2],
@@ -162,7 +166,11 @@ export class Project extends Scene {
                 z = -maze_coords[i][2] * this.BOX_SIZE_units;
             // uncomment the line below to see without darkness
             // this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z),this.materials.plastic.override({color: this.gray}));
-            this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z), this.materials.path_light.override({radius: light_radius}));
+            if (i == 0) {
+                this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z), this.materials.regular_light);
+            } else {
+                this.shapes.cube.draw(context, program_state, Mat4.translation(x, y, z), this.materials.path_light.override({radius: light_radius}));
+            }
         }
     }
 
@@ -174,6 +182,47 @@ export class Project extends Scene {
                 z = -light_coords[i][2] * this.BOX_SIZE_units;
             program_state.lights.push(new Light(vec4(x, y, z, 1), hex_color("#b0f542"), 1000));
         }
+    }
+
+    detect_collision_block_movement_of_avatar(obstacle_loc) {
+        let box_maxX = (obstacle_loc[0] + 0.5) * this.BOX_SIZE_units;
+        let box_minX = (obstacle_loc[0] - 0.5) * this.BOX_SIZE_units;
+        let box_maxY = (obstacle_loc[1] + 0.5) * this.BOX_SIZE_units;
+        let box_minY = (obstacle_loc[1] - 0.5) * this.BOX_SIZE_units;
+        let box_maxZ = (-obstacle_loc[2] + 0.5) * this.BOX_SIZE_units;
+        let box_minZ = (-obstacle_loc[2] - 0.5) * this.BOX_SIZE_units;
+        let x = Math.max(box_minX, Math.min(this.avatar_point[0], box_maxX));
+        let y = Math.max(box_minY, Math.min(this.avatar_point[1], box_maxY));
+        let z = Math.max(box_minZ, Math.min(this.avatar_point[2], box_maxZ));
+        let distance = Math.sqrt(
+            (x - this.avatar_point[0]) * (x - this.avatar_point[0]) +
+            (y - this.avatar_point[1]) * (y - this.avatar_point[1]) +
+            (z - this.avatar_point[2]) * (z - this.avatar_point[2])
+        );
+        let overlap = this.sphere_radius - distance;
+        // COLLISION
+        if (distance < this.sphere_radius) {
+            if (this.thrust[1] < 0 && this.avatar_point[1] > 0.5 * this.BOX_SIZE_units) {
+                this.avatar_point[1] += overlap;
+                this.thrust[1] = 0;
+            }
+            if (this.thrust[0] > 0) {
+                this.avatar_point[0] -= overlap;
+            }
+            if (this.thrust[0] < 0) {
+                this.avatar_point[0] += overlap;
+            }
+            if (this.thrust[2] > 0) {
+                this.avatar_point[2] -= overlap;
+            }
+            if (this.thrust[2] < 0) {
+                this.avatar_point[2] += overlap;
+            }
+            this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
+                .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
+            return true;
+        }
+        return false; // no collision
     }
 
     display(context, program_state) {
@@ -188,21 +237,39 @@ export class Project extends Scene {
         }
         this.time_left = 60 - Math.floor(t) + this.time_offset;
 
+        let distance_to_win = Math.sqrt(
+            (this.end_point[0] - this.avatar_point[0])**2 +
+            (this.end_point[1] - this.avatar_point[1])**2 +
+            (this.end_point[2] - this.avatar_point[2])**2
+        );
+
+        if (distance_to_win <= this.sphere_radius*3) {
+            this.game_win = true;
+        }
+
         // END GAME
-        if (this.lives <= 0 || this.time_left <= 0) {
+        if (this.lives <= 0 || this.time_left <= 0 || this.game_win) {
             this.start_game = false;
             this.time_offset = null;
             this.lives = 3;
             this.generate_maze();
 
-            document.getElementById("game-over").style.display = "block";
-            const ui = Array.from(document.getElementsByClassName("interface"));
-            ui.forEach(el => el.style.display = "none");
-
             this.avatar_point = this.starting_pos;
             this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
                 .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
 
+            if (this.game_win) {
+                this.game_win = false;
+                let score = this.lives * (this.time_left**2)
+                document.getElementById("score").innerHTML = score;
+                document.getElementById("lives-win").innerHTML = this.lives;
+                document.getElementById("time-win").innerHTML = this.time_left;
+                document.getElementById("game-win").style.display = "block";
+            } else {
+                document.getElementById("game-over").style.display = "block";
+            }
+            const ui = Array.from(document.getElementsByClassName("interface"));
+            ui.forEach(el => el.style.display = "none");
             return;
         }
 
@@ -220,42 +287,12 @@ export class Project extends Scene {
         // TODO: Collision Detection
         const maze_coords = this.maze_coords;
         for (let i = 0; i < maze_coords.length; i++) {
-            let box_maxX = (maze_coords[i][0] + 0.5) * this.BOX_SIZE_units;
-            let box_minX = (maze_coords[i][0] - 0.5) * this.BOX_SIZE_units;
-            let box_maxY = (maze_coords[i][1] + 0.5) * this.BOX_SIZE_units;
-            let box_minY = (maze_coords[i][1] - 0.5) * this.BOX_SIZE_units;
-            let box_maxZ = (-maze_coords[i][2] + 0.5) * this.BOX_SIZE_units;
-            let box_minZ = (-maze_coords[i][2] - 0.5) * this.BOX_SIZE_units;
-            let x = Math.max(box_minX, Math.min(this.avatar_point[0], box_maxX));
-            let y = Math.max(box_minY, Math.min(this.avatar_point[1], box_maxY));
-            let z = Math.max(box_minZ, Math.min(this.avatar_point[2], box_maxZ));
-            let distance = Math.sqrt(
-                (x - this.avatar_point[0]) * (x - this.avatar_point[0]) +
-                (y - this.avatar_point[1]) * (y - this.avatar_point[1]) +
-                (z - this.avatar_point[2]) * (z - this.avatar_point[2])
-            );
-            let overlap = this.sphere_radius - distance;
-            if (distance < this.sphere_radius) {
-                if (this.thrust[1] < 0 && this.avatar_point[1] > 0.5 * this.BOX_SIZE_units) {
-                    this.avatar_point[1] += overlap;
-                    this.thrust[1] = 0;
-                }
-                if (this.thrust[0] > 0) {
-                    this.avatar_point[0] -= overlap;
-                }
-                if (this.thrust[0] < 0) {
-                    this.avatar_point[0] += overlap;
-                }
-                if (this.thrust[2] > 0) {
-                    this.avatar_point[2] -= overlap;
-                }
-                if (this.thrust[2] < 0) {
-                    this.avatar_point[2] += overlap;
-                }
-                this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
-                    .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
-            }
+            this.detect_collision_block_movement_of_avatar(maze_coords[i]);
         }
+
+
+
+        // collisions with walls
         let overlap_rwall = (this.avatar_point[0] + this.sphere_radius) - (8 - 0.5 * this.BOX_SIZE_units);
         let overlap_lwall = (-12 + 0.5 * this.BOX_SIZE_units) - (this.avatar_point[0] - this.sphere_radius);
         if (this.thrust[0] > 0 && overlap_rwall > 0) {
@@ -321,9 +358,7 @@ export class Project extends Scene {
         // DRAW MAZE
         this.draw_maze(context, program_state, light_radius);
 
-        // Red end caps
-        this.shapes.cube.draw(context, program_state, Mat4.translation(0, 0.5, 2), this.materials.plastic.override({color: red}));
-        this.shapes.cube.draw(context, program_state, Mat4.translation(this.random_2[6], 0.5, -26), this.materials.plastic.override({color: red}));
+        this.shapes.cube.draw(context, program_state, Mat4.translation(...this.end_point), this.materials.plastic.override({color: red}));
 
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
