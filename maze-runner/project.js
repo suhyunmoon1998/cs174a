@@ -23,18 +23,8 @@ export class Project extends Scene {
         };
 
         this.gray = hex_color("#808080");
-        
-         this.random_3 = [];
-        for (let j = 1; j < 10; j++) {
-            this.random_3.push(Math.floor(Math.random() * (3 - (-5) + 1)) + (-5));
-        }
 
-         this.light_coords = Vector3.cast(
-            [this.random_3[1], 1, 3],
-            [this.random_3[2], 1, 5],
-            [this.random_3[3], 1, 9],
-            [this.random_3[7], 1, 7]
-        );
+        this.generate_maze();
 
         // *** Materials
         // TODO: Change materials to add texture etc.
@@ -69,7 +59,7 @@ export class Project extends Scene {
 
         this.BOX_SIZE_units = 2;
 
-        this.generate_maze();
+
 
         // RADIUS LIGHT VARIABLES
         this.ALL_VISIBLE_INTERVAL = 4.0;
@@ -85,6 +75,13 @@ export class Project extends Scene {
         this.time_offset = null;
         this.time_left = 60;
         this.game_win = false;
+        this.constant_lights = false;
+        this.constant_light_coords = Vector3.cast(
+            [-3, 1, 3],
+            [1, 1, 5],
+            [-3, 1, 7],
+            [2, 1, 9],
+        );
     }
 
     generate_maze() {
@@ -97,6 +94,23 @@ export class Project extends Scene {
         for (let j = 1; j < 10; j++) {
             this.random_2.push(Math.floor(Math.random() * (3 - (-5) + 1)) + (-5));
         }
+
+        this.random_3 = [];
+        for (let j = 1; j < 10; j++) {
+            this.random_3.push(Math.floor(Math.random() * (3 - (-5) + 1)) + (-5));
+        }
+
+        if (this.constant_lights) {
+            this.light_coords = this.constant_light_coords;
+        } else {
+            this.light_coords = Vector3.cast(
+                [this.random_3[1], 1, 3],
+                [this.random_3[2], 1, 5],
+                [this.random_3[3], 1, 9],
+                [this.random_3[7], 1, 7]
+            );
+        }
+
 
         this.maze_coords = Vector3.cast(
             [0, 0, 0],
@@ -146,16 +160,14 @@ export class Project extends Scene {
                 this.start_game = true;
             }
         );
-        this.key_triggered_button("Light-Stay", ["b"], () =>{
-        this.light_coords = Vector3.cast(
-            [-3, 1, 3],
-            [1, 1, 5],
-            [-3, 1, 7],
-            [2, 1, 9],
-        );
+        this.new_line();
+        this.key_triggered_button("Toggle randomly generated light positions for current and future games", ["b"], () => {
+            if (!this.constant_lights) {
+                this.light_coords = this.constant_light_coords
+            }
+            this.constant_lights = !this.constant_lights;
 
-        }
-        );
+        });
         //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
 
