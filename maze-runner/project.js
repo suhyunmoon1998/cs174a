@@ -24,11 +24,11 @@ export class Project extends Scene {
 
         this.gray = hex_color("#808080");
 
-        this.light_coords = Vector3.cast(
-            [2, 1, 3],
-            [-2, 1, 5],
-            [-3, 1, 9],
-            [2, 1, 7]
+         this.light_coords = Vector3.cast(
+            [this.random_3[1], 1, 3],
+            [this.random_3[2], 1, 5],
+            [this.random_3[3], 1, 9],
+            [this.random_3[7], 1, 7]
         );
 
         // *** Materials
@@ -140,6 +140,16 @@ export class Project extends Scene {
                 ui.forEach(el => el.style.display = "block");
                 this.start_game = true;
             }
+        );
+        this.key_triggered_button("Light-Stay", ["b"], () =>{
+        this.light_coords = Vector3.cast(
+            [-3, 1, 3],
+            [1, 1, 5],
+            [-3, 1, 7],
+            [2, 1, 9],
+        );
+
+        }
         );
         //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
