@@ -23,6 +23,11 @@ export class Project extends Scene {
         };
 
         this.gray = hex_color("#808080");
+        
+         this.random_3 = [];
+        for (let j = 1; j < 10; j++) {
+            this.random_3.push(Math.floor(Math.random() * (3 - (-5) + 1)) + (-5));
+        }
 
          this.light_coords = Vector3.cast(
             [this.random_3[1], 1, 3],
