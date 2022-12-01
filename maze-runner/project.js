@@ -19,6 +19,7 @@ export class Project extends Scene {
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             cube: new defs.Cube(),
+            portal: new defs.Cube(),
             sphere: new defs.Subdivision_Sphere(4),
         };
 
@@ -39,6 +40,11 @@ export class Project extends Scene {
             wall: new Material(new Textured_Phong, {
                 ambient: 0.1, diffusivity: 0.2, specularity: 0.,
                 texture: new Texture("assets/wall_stones.jpeg"),
+                color: color(0, 0, 0, 1),
+            }),
+            portal: new Material(new Texture_Rotate(), {
+                ambient: 0.1, diffusivity: 0.2, specularity: 0.,
+                texture: new Texture("assets/vortex.png"),
                 color: color(0, 0, 0, 1),
             })
         };
@@ -74,7 +80,9 @@ export class Project extends Scene {
         this.lives = 3;
         this.time_offset = null;
         this.time_left = 60;
+        this.time_for_level = 60;
         this.game_win = false;
+        this.infinite_game = false;
         this.constant_lights = false;
         this.constant_light_coords = Vector3.cast(
             [-3, 1, 3],
@@ -82,6 +90,8 @@ export class Project extends Scene {
             [-3, 1, 7],
             [2, 1, 9],
         );
+
+        this.hi_score = 0;
     }
 
     generate_maze() {
@@ -109,6 +119,7 @@ export class Project extends Scene {
                 [this.random_3[3], 1, 9],
                 [this.random_3[7], 1, 7]
             );
+            this.random_coords = this.light_coords
         }
 
 
@@ -161,13 +172,23 @@ export class Project extends Scene {
             }
         );
         this.new_line();
-        this.key_triggered_button("Toggle randomly generated light positions for current and future games", ["b"], () => {
+        this.key_triggered_button("Toggle random light positions", ["b"], () => {
             if (!this.constant_lights) {
                 this.light_coords = this.constant_light_coords
+            } else {
+                this.light_coords = this.random_coords;
             }
             this.constant_lights = !this.constant_lights;
 
         });
+        this.new_line();
+        this.live_string(box => box.textContent = (this.constant_lights ? "Constant" : "Randomly generated light positions"));
+        this.new_line();
+        this.key_triggered_button("Toggle infinity of game", ["v"], () => {
+            this.infinite_game = !this.infinite_game;
+        });
+        this.new_line();
+        this.live_string(box => box.textContent = (this.infinite_game ? "Infinite" : "Not Infinite (next level win = game win, game ends)"));
         //this.key_triggered_button("TEMP", ["x"], () => this.thrust[1] = -1, undefined, () => this.thrust[1] = 0);
     }
 
@@ -262,7 +283,7 @@ export class Project extends Scene {
         if (this.start_game && !this.time_offset) {
             this.time_offset = Math.floor(t);
         }
-        this.time_left = 60 - Math.floor(t) + this.time_offset;
+        this.time_left = this.time_for_level - Math.floor(t) + this.time_offset;
 
         let distance_to_win = Math.sqrt(
             (this.end_point[0] - this.avatar_point[0])**2 +
@@ -278,17 +299,26 @@ export class Project extends Scene {
         if (this.lives <= 0 || this.time_left <= 0 || this.game_win) {
             this.start_game = false;
             this.time_offset = null;
-            this.lives = 3;
             this.generate_maze();
 
             this.avatar_point = this.starting_pos;
             this.avatar_transform = Mat4.translation(this.avatar_point[0], this.avatar_point[1], this.avatar_point[2])
                 .times(Mat4.scale(this.sphere_radius, this.sphere_radius, this.sphere_radius));
 
-            if (this.game_win) {
+            if (this.game_win && this.infinite_game) {
+                this.time_for_level = this.time_left + 60;
+                this.lives += 3;
+                this.start_game = true;
                 this.game_win = false;
-                let score = this.lives * (this.time_left**2)
+                return;
+            }
+
+            if (this.game_win && !this.infinite_game) {
+                this.game_win = false;
+                let score = this.lives * (this.time_left**2);
+                this.hi_score = Math.max(score, this.hi_score);
                 document.getElementById("score").innerHTML = score;
+                document.getElementById("hi-score").innerHTML = this.hi_score;
                 document.getElementById("lives-win").innerHTML = this.lives;
                 document.getElementById("time-win").innerHTML = this.time_left;
                 document.getElementById("game-win").style.display = "block";
@@ -297,6 +327,10 @@ export class Project extends Scene {
             }
             const ui = Array.from(document.getElementsByClassName("interface"));
             ui.forEach(el => el.style.display = "none");
+
+            this.lives = 3;
+
+
             return;
         }
 
@@ -385,7 +419,12 @@ export class Project extends Scene {
         // DRAW MAZE
         this.draw_maze(context, program_state, light_radius);
 
-        this.shapes.cube.draw(context, program_state, Mat4.translation(...this.end_point), this.materials.plastic.override({color: red}));
+        // DRAW END POINT
+        this.shapes.cube.draw(context, program_state, Mat4.translation(
+            this.end_point[0],
+            this.end_point[1] + 0.5,
+            this.end_point[2]
+        ).times(Mat4.scale(1, 0.001, 1)), this.materials.portal);
 
         // DRAW SPHERE
         this.shapes.sphere.draw(context, program_state, this.avatar_transform, this.materials.plastic);
@@ -491,7 +530,8 @@ class Textured_Phong extends defs.Phong_Shader {
     update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
         // update_GPU(): Add a little more to the base class's version of this method.
         super.update_GPU(context, gpu_addresses, gpu_state, model_transform, material);
-
+        // Updated for assignment 4
+        context.uniform1f(gpu_addresses.animation_time, gpu_state.animation_time / 1000);
         if (material.texture && material.texture.ready) {
             // Select texture unit 0 for the fragment shader Sampler2D uniform called "texture":
             context.uniform1i(gpu_addresses.texture, 0);
@@ -603,4 +643,25 @@ class Radius_Shader extends Textured_Phong {
                     }
                 } `;
     }
+}
+class Texture_Rotate extends Textured_Phong {
+    // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #7.
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+            varying vec2 f_tex_coord;
+            uniform sampler2D texture;
+            uniform float animation_time;
+            void main(){
+                float rot_angle = -((15./60.) * (2.*3.14159265359) * mod(animation_time, (60./15.)));
+                mat2 rot_mat = mat2(cos(rot_angle), sin(rot_angle), -sin(rot_angle), cos(rot_angle));
+                vec2 tex_to_origin = f_tex_coord + vec2(-0.5, -0.5);
+                vec2 new_tex_coord = (rot_mat*tex_to_origin) + vec2(0.5, 0.5);
+                
+                // Sample the texture image in the correct place:
+                vec4 tex_color = texture2D( texture, new_tex_coord );
+    
+                gl_FragColor = tex_color;
+        } `;
+    }
+
 }

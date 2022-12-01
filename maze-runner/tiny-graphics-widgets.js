@@ -93,7 +93,7 @@ const Controls_Widget = widgets.Controls_Widget =
         // Scene object, each providing interactive elements such as buttons with key
         // bindings, live readouts of Scene data members, etc.
         constructor(element, scenes) {
-            const rules = [".controls-widget * { font-family: monospace }",
+            const rules = [".controls-widget * { font-family: monospace; color: white}",
                 ".controls-widget div { background: Black }",
                 ".controls-widget table { border-collapse: collapse; display:block; overflow-x: auto; table-layout: fixed;}",
                 ".controls-widget table.control-box { width: 1080px; border:1px; margin:0; max-height:380px; " +
