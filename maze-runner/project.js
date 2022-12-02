@@ -329,6 +329,7 @@ export class Project extends Scene {
             ui.forEach(el => el.style.display = "none");
 
             this.lives = 3;
+            this.time_for_level = 60;
 
 
             return;
