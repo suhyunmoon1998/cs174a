@@ -158,10 +158,10 @@ export class Project extends Scene {
             + this.avatar_point[1].toFixed(2) + ", "
             + this.avatar_point[2].toFixed(2));
         this.new_line();
-        this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = -1, undefined, () => this.thrust[2] = 0);
-        this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -1, undefined, () => this.thrust[0] = 0);
-        this.key_triggered_button("Back", ["s"], () => this.thrust[2] = 1, undefined, () => this.thrust[2] = 0);
-        this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 1, undefined, () => this.thrust[0] = 0);
+        this.key_triggered_button("Forward", ["w"], () => this.thrust[2] = -0.8, undefined, () => this.thrust[2] = 0);
+        this.key_triggered_button("Left", ["a"], () => this.thrust[0] = -0.8, undefined, () => this.thrust[0] = 0);
+        this.key_triggered_button("Back", ["s"], () => this.thrust[2] = 0.8, undefined, () => this.thrust[2] = 0);
+        this.key_triggered_button("Right", ["d"], () => this.thrust[0] = 0.8, undefined, () => this.thrust[0] = 0);
         this.new_line();
         this.key_triggered_button("Start game", ["Enter"], () => {
                 const titles = Array.from(document.getElementsByClassName("title-card"));
@@ -342,7 +342,7 @@ export class Project extends Scene {
 
         // TODO: Apply gravity on the ball
         let gravity;
-        gravity = 0.05;
+        gravity = 0.12;
         this.thrust[1] -= gravity;
 
 
